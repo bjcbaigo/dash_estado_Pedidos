@@ -309,12 +309,29 @@
         function renderPendientesPorCanal(canales) {
   // ordenar por “impacto operativo” (primero por $ sin remitir, luego por $ pend fact)
   var ordenados = canales
-    .slice()
-    .sort(function(a, b) {
-      var aKey = (Number(a.ImportePendRemitir) || 0) * 1000000000 + (Number(a.ImportePendFacturar) || 0);
-      var bKey = (Number(b.ImportePendRemitir) || 0) * 1000000000 + (Number(b.ImportePendFacturar) || 0);
-      return bKey - aKey;
-    });
+  .slice()
+  .sort(function(a, b) {
+    var aSin = Number(a.SinRemitir) || 0;
+    var bSin = Number(b.SinRemitir) || 0;
+
+    // 1) Mayor cantidad Sin Remitir
+    if (bSin !== aSin) return bSin - aSin;
+
+    // 2) Mayor $ Sin Remitir
+    var aImpSin = Number(a.ImportePendRemitir) || 0;
+    var bImpSin = Number(b.ImportePendRemitir) || 0;
+    if (bImpSin !== aImpSin) return bImpSin - aImpSin;
+
+    // 3) Mayor cantidad Pend. Facturar
+    var aPend = Number(a.PendFacturar) || 0;
+    var bPend = Number(b.PendFacturar) || 0;
+    if (bPend !== aPend) return bPend - aPend;
+
+    // 4) Mayor $ Pend. Facturar
+    var aImpPend = Number(a.ImportePendFacturar) || 0;
+    var bImpPend = Number(b.ImportePendFacturar) || 0;
+    return bImpPend - aImpPend;
+  });
 
   var html = ordenados.map(function(c) {
     var pendFact = Number(c.PendFacturar) || 0;
