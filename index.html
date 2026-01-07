@@ -306,6 +306,42 @@
         // RENDERIZADO
         // =====================================================
 
+        function renderPendientesPorCanal(canales) {
+  // ordenar por “impacto operativo” (primero por $ sin remitir, luego por $ pend fact)
+  var ordenados = canales
+    .slice()
+    .sort(function(a, b) {
+      var aKey = (Number(a.ImportePendRemitir) || 0) * 1000000000 + (Number(a.ImportePendFacturar) || 0);
+      var bKey = (Number(b.ImportePendRemitir) || 0) * 1000000000 + (Number(b.ImportePendFacturar) || 0);
+      return bKey - aKey;
+    });
+
+  var html = ordenados.map(function(c) {
+    var pendFact = Number(c.PendFacturar) || 0;
+    var sinRem = Number(c.SinRemitir) || 0;
+    var impPendFact = Number(c.ImportePendFacturar) || 0;
+    var impPendRem = Number(c.ImportePendRemitir) || 0;
+
+    // resaltados condicionales
+    var clsPendFact = pendFact > 0 ? 'text-amber-700 font-semibold' : 'text-slate-500';
+    var clsSinRem = sinRem > 0 ? 'text-rose-700 font-semibold' : 'text-slate-500';
+
+    return `
+      <tr class="hover:bg-slate-50">
+        <td class="px-5 py-3 text-slate-800 font-semibold">${getCanalIcon(c.Nombre)} ${c.Nombre}</td>
+        <td class="px-5 py-3 text-right ${clsPendFact}">${formatNumber(pendFact)}</td>
+        <td class="px-5 py-3 text-right ${clsPendFact}">${formatCurrency(impPendFact)}</td>
+        <td class="px-5 py-3 text-right ${clsSinRem}">${formatNumber(sinRem)}</td>
+        <td class="px-5 py-3 text-right ${clsSinRem}">${formatCurrency(impPendRem)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('tablaPendCanal').innerHTML = html || `
+    <tr><td class="px-5 py-6 text-center text-slate-500" colspan="5">Sin datos para mostrar</td></tr>
+  `;
+}
+        
         function renderMetricas(totales) {
             var metricas = [
                 { titulo: 'Total Ordenes', valor: totales.ordenes, subtitulo: 'Ultimos 30 dias', color: 'blue', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
