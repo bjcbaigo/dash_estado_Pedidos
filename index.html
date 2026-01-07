@@ -512,6 +512,8 @@
             renderMetricas(totales);
             renderFlujoVisual(totales);
             renderGraficos(canales, vendedores, totales);
+            renderPendientesPorCanal(canales);
+
             
             document.getElementById('canales').innerHTML = canales.map(function(c) { return renderFilaAgrupacion(c, 'CANAL'); }).join('');
             document.getElementById('vendedores').innerHTML = vendedores.map(function(v) { return renderFilaAgrupacion(v, 'VENDEDOR'); }).join('');
