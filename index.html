@@ -38,17 +38,12 @@
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <!-- Selector de periodo -->
+                    <!-- Indicador de periodo fijo -->
                     <div class="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <select id="selectPeriodo" class="bg-transparent text-white text-sm focus:outline-none cursor-pointer">
-                            <option value="7" class="text-slate-900">Ultimos 7 dias</option>
-                            <option value="15" class="text-slate-900">Ultimos 15 dias</option>
-                            <option value="30" class="text-slate-900" selected>Ultimos 30 dias</option>
-                            <option value="60" class="text-slate-900">Ultimos 60 dias</option>
-                        </select>
+                        <span class="text-white text-sm">Ultimos 30 dias</span>
                     </div>
                     
                     <!-- Boton actualizar -->
@@ -125,13 +120,13 @@
         // =====================================================
         const CONFIG = {
             // Opcion 1: Google Apps Script URL
-            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyaSUgKBwG8SR3RMdhogJ_1E73dFmChaTFwWu85XTn1EH6B2dTurlWpJa_2Oy2Agi7p/exec',
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/TU_SCRIPT_ID/exec',
             
             // Opcion 2: URL directa al CSV (si esta en un servidor)
             CSV_URL: '',
             
             // Usar datos de ejemplo (true para pruebas, false para produccion)
-            USAR_DATOS_EJEMPLO: false
+            USAR_DATOS_EJEMPLO: true
         };
 
         // Datos de ejemplo para desarrollo
@@ -184,7 +179,7 @@
 
         function renderMetricas(totales) {
             const metricas = [
-                { titulo: 'Total Ordenes', valor: totales.ordenes, subtitulo: 'Periodo: ' + document.getElementById('selectPeriodo').value + ' dias', color: 'blue', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+                { titulo: 'Total Ordenes', valor: totales.ordenes, subtitulo: 'Ultimos 30 dias', color: 'blue', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
                 { titulo: 'Facturadas', valor: totales.facturadas, subtitulo: calcularPorcentaje(totales.facturadas, totales.ordenes) + '% del total', color: 'emerald', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
                 { titulo: 'Pend. Facturar', valor: totales.pendFacturar, subtitulo: formatCurrency(totales.importePendFact), color: 'amber', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
                 { titulo: 'Remitidas', valor: totales.remitidas, subtitulo: calcularPorcentaje(totales.remitidas, totales.facturadas) + '% de fact.', color: 'cyan', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
@@ -385,7 +380,6 @@
         // =====================================================
 
         document.getElementById('btnActualizar').addEventListener('click', cargarDatos);
-        document.getElementById('selectPeriodo').addEventListener('change', cargarDatos);
 
         // Cargar al inicio
         cargarDatos();
