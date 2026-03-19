@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHEMES · Estado de Pedidos Web</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue:      #2596be;
+            --blue-dk:   #1a7a9e;
+            --blue-lt:   #7ecfe0;
+            --blue-bg:   #eaf6fb;
+            --amber:     #f59e0b;
+            --amber-bg:  #fffbeb;
+            --amber-br:  #fde68a;
+            --red:       #ef4444;
+            --red-bg:    #fef2f2;
+            --red-br:    #fecaca;
+            --green:     #10b981;
+            --green-bg:  #ecfdf5;
+            --green-br:  #6ee7b7;
+            --g50:  #f8fafc;
+            --g100: #f1f5f9;
+            --g200: #e2e8f0;
+            --g300: #cbd5e1;
+            --g400: #94a3b8;
+            --g500: #64748b;
+            --g700: #334155;
+            --g900: #0f172a;
+            --white: #ffffff;
+            --card-r: 10px;
+            --sm-r:   6px;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--g100);
+            color: var(--g900);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--g100); }
+        ::-webkit-scrollbar-thumb { background: var(--g300); border-radius: 3px; }
+
+        /* ── HEADER ── */
+        .hdr {
+            background: var(--blue);
+            color: var(--white);
+            padding: 0 16px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 2px 8px rgba(0,0,0,.18);
+        }
+        .hdr-left { display: flex; align-items: center; gap: 10px; }
+        .hdr-logo {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,.2);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px;
+            flex-shrink: 0;
+        }
+        .hdr-title  { font-size: 14px; font-weight: 700; letter-spacing: -.2px; line-height: 1.2; }
+        .hdr-sub    { font-size: 10px; opacity: .75; font-weight: 400; display: none; }
+        .hdr-right  { display: flex; align-items: center; gap: 8px; }
+        .badge-periodo {
+            background: rgba(255,255,255,.15);
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+            display: none;
+        }
+        .btn-reload {
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.3);
+            color: var(--white);
+            border-radius: var(--sm-r);
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'DM Sans', sans-serif;
+            transition: background .15s;
+            white-space: nowrap;
+        }
+        .btn-reload:hover  { background: rgba(255,255,255,.28); }
+        .btn-reload:disabled { opacity: .5; cursor: not-allowed; }
+        .spin { animation: spin .8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── INFO BAR ── */
+        .infobar {
+            background: var(--white);
+            border-bottom: 1px solid var(--g200);
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--g500);
+        }
+        .infobar-pill {
+            display: flex; align-items: center; gap: 4px;
+            background: var(--g50);
+            border: 1px solid var(--g200);
+            border-radius: 20px;
+            padding: 2px 8px;
+        }
+        .infobar-pill span { font-weight: 600; color: var(--g700); }
+        .dot-ok  { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
+        .dot-err { width: 6px; height: 6px; border-radius: 50%; background: var(--red);   display: inline-block; }
+
+        /* ── MAIN LAYOUT ── */
+        .main { max-width: 1200px; margin: 0 auto; padding: 14px 12px 32px; }
+
+        /* ── ERROR ── */
+        .error-box {
+            display: none;
+            background: var(--red-bg);
+            border: 1px solid var(--red-br);
+            color: var(--red);
+            border-radius: var(--card-r);
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── METRICAS GRID ── */
+        .metricas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .metrica-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            padding: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+            animation: fadeUp .4s ease both;
+        }
+        .metrica-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .metrica-card.c-blue::before   { background: var(--blue); }
+        .metrica-card.c-amber::before  { background: var(--amber); }
+        .metrica-card.c-red::before    { background: var(--red); }
+        .metrica-card.c-green::before  { background: var(--green); }
+        .metrica-card.c-blue-lt::before { background: var(--blue-lt); }
+
+        .metrica-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--g400);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 6px;
+        }
+        .metrica-value {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--g900);
+            margin-bottom: 4px;
+            letter-spacing: -.5px;
+        }
+        .metrica-sub {
+            font-size: 11px;
+            color: var(--g400);
+        }
+        .metrica-sub.amber { color: var(--amber); font-weight: 600; }
+        .metrica-sub.red   { color: var(--red);   font-weight: 600; }
+        .metrica-sub.green { color: var(--green);  font-weight: 600; }
+        .metrica-sub.blue  { color: var(--blue);   font-weight: 600; }
+
+        /* metrica total ocupa ancho completo en mobile */
+        .metrica-card.full { grid-column: 1 / -1; }
+
+        /* ── JORNADA INFO ── */
+        .jornada-box {
+            background: var(--blue-bg);
+            border: 1px solid var(--blue-lt);
+            border-radius: var(--card-r);
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 11px;
+            color: var(--blue-dk);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .jornada-box strong { font-weight: 700; }
+
+        /* ── FLUJO ── */
+        .flujo-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 14px;
+        }
+        .flujo-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--g500);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .flujo-title svg { color: var(--blue); }
+        .flujo-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 4px;
+        }
+        .flujo-step {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            flex: 1;
+        }
+        .flujo-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .flujo-icon.blue   { background: var(--blue-bg);  color: var(--blue); }
+        .flujo-icon.amber  { background: var(--amber-bg); color: var(--amber); }
+        .flujo-icon.green  { background: var(--green-bg); color: var(--green); }
+        .flujo-icon.red    { background: var(--red-bg);   color: var(--red); }
+        .flujo-num  { font-size: 20px; font-weight: 700; color: var(--g900); letter-spacing: -.5px; }
+        .flujo-lbl  { font-size: 10px; color: var(--g400); font-weight: 500; text-align: center; }
+        .flujo-arrow { color: var(--g300); font-size: 16px; flex-shrink: 0; }
+
+        /* ── GRAFICOS ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .chart-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            padding: 14px;
+            box-shadow: var(--shadow);
+        }
+        .chart-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--g500);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .chart-wrap { height: 140px; position: relative; }
+
+        /* ── TABLA PENDIENTES ── */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--g700);
+            margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .section-title svg { color: var(--blue); flex-shrink: 0; }
+
+        .table-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            box-shadow: var(--shadow);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 420px; }
+        thead th {
+            background: var(--g50);
+            padding: 9px 12px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--g400);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid var(--g200);
+            white-space: nowrap;
+        }
+        thead th.r { text-align: right; }
+        tbody tr { border-bottom: 1px solid var(--g100); transition: background .1s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--g50); }
+        td { padding: 9px 12px; }
+        td.r { text-align: right; }
+        .td-canal { font-weight: 600; color: var(--g700); display: flex; align-items: center; gap: 6px; }
+        .badge-pend {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-pend.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-br); }
+        .badge-pend.red   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-br);   }
+        .badge-pend.ok    { background: var(--g50);      color: var(--g400);  border: 1px solid var(--g200);     }
+
+        /* ── CARDS DE CANAL ── */
+        .canales-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .canal-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            padding: 14px;
+            box-shadow: var(--shadow);
+        }
+        .canal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .canal-nombre { font-size: 14px; font-weight: 700; color: var(--g900); display: flex; align-items: center; gap: 6px; }
+        .canal-total  { font-size: 22px; font-weight: 700; color: var(--blue); letter-spacing: -.5px; }
+        .canal-bars   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .bar-block {}
+        .bar-label-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+        .bar-label-row span:first-child { color: var(--g500); }
+        .bar-track { background: var(--g100); border-radius: 4px; height: 6px; overflow: hidden; }
+        .bar-fill  { height: 100%; border-radius: 4px; transition: width .6s ease; }
+        .bar-fill.blue  { background: var(--blue); }
+        .bar-fill.green { background: var(--green); }
+        .bar-counts { display: flex; justify-content: space-between; font-size: 10px; color: var(--g400); margin-top: 3px; }
+        .canal-footer { border-top: 1px solid var(--g100); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+        /* ── FOOTER ── */
+        .page-footer {
+            text-align: center;
+            font-size: 11px;
+            color: var(--g400);
+            padding: 16px 0 0;
+        }
+
+        /* ── ANIMACIONES ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — tablet 600px+
+        ══════════════════════════════════════ */
+        @media (min-width: 600px) {
+            .main { padding: 16px 16px 40px; }
+            .hdr  { padding: 0 20px; }
+            .hdr-sub          { display: block; }
+            .badge-periodo    { display: flex; }
+            .metricas-grid    { grid-template-columns: repeat(3, 1fr); }
+            .metrica-card.full { grid-column: auto; }
+            .charts-grid      { grid-template-columns: repeat(2, 1fr); }
+            .canales-grid     { grid-template-columns: repeat(2, 1fr); }
+            .chart-wrap       { height: 160px; }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — desktop 960px+
+        ══════════════════════════════════════ */
+        @media (min-width: 960px) {
+            .hdr { padding: 0 28px; height: 56px; }
+            .hdr-title { font-size: 15px; }
+            .main { padding: 20px 24px 48px; }
+            .metricas-grid    { grid-template-columns: repeat(5, 1fr); gap: 12px; }
+            .charts-grid      { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+            .canales-grid     { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .metrica-value    { font-size: 28px; }
+            .chart-wrap       { height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+    <div class="hdr-left">
+        <div class="hdr-logo">CH</div>
+        <div>
+            <div class="hdr-title">CHEMES &middot; Estado de Pedidos</div>
+            <div class="hdr-sub">Dashboard E-commerce · Últimas 30 jornadas</div>
+        </div>
+    </div>
+    <div class="hdr-right">
+        <div class="badge-periodo" id="badgePeriodo">&#128197; 30 jornadas</div>
+        <button class="btn-reload" id="btnReload">
+            <svg id="icoReload" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4v5h5"/><path d="M20 20v-5h-5"/>
+                <path d="M4 9a9 9 0 0115-4.5L20 9"/><path d="M20 15a9 9 0 01-15 4.5L4 15"/>
+            </svg>
+            Recargar
+        </button>
+    </div>
+</header>
+
+<!-- INFO BAR -->
+<div class="infobar" id="infobar">
+    <div class="infobar-pill">Período: <span id="infoPeriodo">—</span></div>
+    <div class="infobar-pill">Jornada: <span id="infoJornada">—</span></div>
+    <div class="infobar-pill">
+        <span id="dotEstado" class="dot-ok"></span>
+        Backend: <span id="infoBackend">Cargando…</span>
+    </div>
+    <div class="infobar-pill">Datos al: <span id="infoActualizado">—</span></div>
+</div>
+
+<main class="main">
+
+    <!-- ERROR -->
+    <div class="error-box" id="errorBox" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="errorText">Error al cargar datos.</span>
+    </div>
+
+    <!-- JORNADA INFO -->
+    <div class="jornada-box" id="jornadaBox" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Jornada comercial: <strong id="jornadaTexto">—</strong></span>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="metricas-grid" id="metricas">
+        <!-- generado por JS -->
+    </div>
+
+    <!-- FLUJO VISUAL -->
+    <div class="flujo-card">
+        <div class="flujo-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            Flujo de jornada
+        </div>
+        <div class="flujo-steps" id="flujoSteps">
+            <!-- generado por JS -->
+        </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">Órdenes por Canal</div>
+            <div class="chart-wrap"><canvas id="chartCanales"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Estado Facturación</div>
+            <div class="chart-wrap"><canvas id="chartFact"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Estado Remisión</div>
+            <div class="chart-wrap"><canvas id="chartRem"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Pend. Facturar vs Remitir</div>
+            <div class="chart-wrap"><canvas id="chartPend"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TABLA PENDIENTES -->
+    <div class="section-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Pendientes por Canal
+    </div>
+    <div class="table-card">
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Canal</th>
+                        <th class="r">Pend. Facturar</th>
+                        <th class="r">$ Pend. Fact.</th>
+                        <th class="r">Sin Remitir</th>
+                        <th class="r">$ Sin Remitir</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaPend"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DETALLE POR CANAL -->
+    <div class="section-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Detalle por Canal
+    </div>
+    <div class="canales-grid" id="canalesGrid"></div>
+
+    <div class="page-footer">
+        Tango Gestión · Talonarios e-commerce 234, 205 &nbsp;·&nbsp; Dashboard de control de facturación y logística
+    </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────
+var CONFIG = {
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyn4ei3_bMVF7siazbjoKod3-g4AaJuuV54LugWkp50SxIkCqztfleDqvmbFDJdpR1b/exec',
+    USAR_DATOS_EJEMPLO: false,
+    AUTO_REFRESH_MS: 5 * 60 * 1000
+};
+
+// ─────────────────────────────────────────────────────
+// PALETA CHEMES
+// ─────────────────────────────────────────────────────
+var COLORES = {
+    canales:  ['#2596be','#7ecfe0','#10b981','#f59e0b','#94a3b8'],
+    fact:     ['#2596be','#f59e0b'],
+    rem:      ['#10b981','#ef4444'],
+    pend:     ['#f59e0b','#ef4444']
+};
+
+var CANAL_ICONS = {
+    'MERCADO LIBRE': '🛒',
+    'Mercado Libre':  '🛒',
+    'VENTAS WEB':    '🌐',
+    'Ventas Web':     '🌐',
+    'SHOP BNA':      '🏦',
+    'Shop BNA':       '🏦',
+    'ICBC MALL':     '🏢',
+    'ICBC Mall':      '🏢',
+    'Otros Canales':  '📦'
+};
+function canalIcon(n) { return CANAL_ICONS[n] || '📦'; }
+
+// ─────────────────────────────────────────────────────
+// FORMATEO
+// ─────────────────────────────────────────────────────
+function fNum(n)  { return Number(n||0).toLocaleString('es-AR'); }
+function fCur(n)  {
+    var v = Number(n||0);
+    if (v >= 1e6) return '$' + (v/1e6).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1}) + 'M';
+    if (v >= 1e3) return '$' + (v/1e3).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0}) + 'K';
+    return '$' + v.toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+function fCurFull(n) { return '$' + Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pct(a,b) { return b > 0 ? ((a/b)*100).toFixed(1) : '0.0'; }
+
+// ─────────────────────────────────────────────────────
+// DATOS EJEMPLO (fallback)
+// ─────────────────────────────────────────────────────
+var DATOS_EJEMPLO = [
+    {OrdenGrupo:0,OrdenFila:0,TipoAgrupacion:'CANAL',Nombre:'MERCADO LIBRE',Ordenes:480,Facturadas:390,PendFacturar:90,Remitidas:373,SinRemitir:17,ImportePendFacturar:0,ImportePendRemitir:3800000},
+    {OrdenGrupo:0,OrdenFila:0,TipoAgrupacion:'CANAL',Nombre:'VENTAS WEB',Ordenes:437,Facturadas:252,PendFacturar:185,Remitidas:225,SinRemitir:27,ImportePendFacturar:0,ImportePendRemitir:8200000},
+    {OrdenGrupo:0,OrdenFila:0,TipoAgrupacion:'CANAL',Nombre:'SHOP BNA',Ordenes:200,Facturadas:160,PendFacturar:40,Remitidas:154,SinRemitir:6,ImportePendFacturar:0,ImportePendRemitir:1900000},
+    {OrdenGrupo:0,OrdenFila:1,TipoAgrupacion:'CANAL',Nombre:'** TOTAL **',Ordenes:1117,Facturadas:802,PendFacturar:315,Remitidas:752,SinRemitir:50,ImportePendFacturar:0,ImportePendRemitir:13900000},
+    {OrdenGrupo:1,OrdenFila:0,TipoAgrupacion:'VENDEDOR',Nombre:'MERCADO LIBRE',Ordenes:480,Facturadas:390,PendFacturar:90,Remitidas:373,SinRemitir:17,ImportePendFacturar:0,ImportePendRemitir:3800000},
+    {OrdenGrupo:1,OrdenFila:0,TipoAgrupacion:'VENDEDOR',Nombre:'VENTAS WEB',Ordenes:437,Facturadas:252,PendFacturar:185,Remitidas:225,SinRemitir:27,ImportePendFacturar:0,ImportePendRemitir:8200000},
+    {OrdenGrupo:1,OrdenFila:0,TipoAgrupacion:'VENDEDOR',Nombre:'SHOP BNA',Ordenes:200,Facturadas:160,PendFacturar:40,Remitidas:154,SinRemitir:6,ImportePendFacturar:0,ImportePendRemitir:1900000},
+    {OrdenGrupo:1,OrdenFila:1,TipoAgrupacion:'VENDEDOR',Nombre:'** TOTAL **',Ordenes:1117,Facturadas:802,PendFacturar:315,Remitidas:752,SinRemitir:50,ImportePendFacturar:0,ImportePendRemitir:13900000}
+];
+
+// ─────────────────────────────────────────────────────
+// CHARTS
+// ─────────────────────────────────────────────────────
+var charts = {};
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#94a3b8';
+
+function mkDonut(id, labels, data, colors) {
+    if (charts[id]) charts[id].destroy();
+    var ctx = document.getElementById(id);
+    if (!ctx) return;
+    charts[id] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff', hoverBorderColor: '#ffffff' }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '68%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
+                tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + fNum(c.raw); } } }
+            }
+        }
+    });
+}
+
+function renderGraficos(canales, totales) {
+    mkDonut('chartCanales',
+        canales.map(function(c){ return c.Nombre; }),
+        canales.map(function(c){ return c.Ordenes; }),
+        COLORES.canales
+    );
+    mkDonut('chartFact',
+        ['Facturadas', 'Pendientes'],
+        [totales.facturadas, totales.pendFacturar],
+        COLORES.fact
+    );
+    mkDonut('chartRem',
+        ['Remitidas', 'Sin Remitir'],
+        [totales.remitidas, totales.sinRemitir],
+        COLORES.rem
+    );
+    mkDonut('chartPend',
+        ['Pend. Facturar', 'Sin Remitir'],
+        [totales.pendFacturar, totales.sinRemitir],
+        COLORES.pend
+    );
+}
+
+// ─────────────────────────────────────────────────────
+// RENDER MÉTRICAS
+// ─────────────────────────────────────────────────────
+function renderMetricas(t) {
+    var items = [
+        { lbl:'Total Órdenes',    val: fNum(t.ordenes),      sub: 'Últimas 30 jornadas',           cls:'c-blue',    subCls:'' },
+        { lbl:'Facturadas',       val: fNum(t.facturadas),   sub: pct(t.facturadas,t.ordenes)+'% del total',   cls:'c-blue-lt', subCls:'blue' },
+        { lbl:'Pend. Facturar',   val: fNum(t.pendFacturar), sub: fCur(t.importePendFact),          cls:'c-amber',   subCls:'amber' },
+        { lbl:'Remitidas',        val: fNum(t.remitidas),    sub: pct(t.remitidas,t.facturadas)+'% de fact.', cls:'c-green',   subCls:'green' },
+        { lbl:'Sin Remitir',      val: fNum(t.sinRemitir),   sub: fCur(t.importePendRem),           cls:'c-red',     subCls:'red' }
+    ];
+    document.getElementById('metricas').innerHTML = items.map(function(m, i) {
+        return '<div class="metrica-card ' + m.cls + '" style="animation-delay:' + (i*60) + 'ms">' +
+            '<div class="metrica-label">' + m.lbl + '</div>' +
+            '<div class="metrica-value">' + m.val + '</div>' +
+            '<div class="metrica-sub ' + m.subCls + '">' + m.sub + '</div>' +
+            '</div>';
+    }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// RENDER FLUJO
+// ─────────────────────────────────────────────────────
+function renderFlujo(t) {
+    var steps = [
+        { icon: '📥', cls: 'blue',  num: fNum(t.ordenes),      lbl: 'Órdenes' },
+        { icon: '✅', cls: 'blue',  num: fNum(t.facturadas),   lbl: 'Facturadas' },
+        { icon: '⏳', cls: 'amber', num: fNum(t.pendFacturar), lbl: 'Pend. Fact.' },
+        { icon: '🚚', cls: 'green', num: fNum(t.remitidas),    lbl: 'Remitidas' },
+        { icon: '⚠️', cls: 'red',   num: fNum(t.sinRemitir),   lbl: 'Sin Remitir' }
+    ];
+    var html = '';
+    steps.forEach(function(s, i) {
+        html += '<div class="flujo-step">' +
+            '<div class="flujo-icon ' + s.cls + '" style="font-size:18px">' + s.icon + '</div>' +
+            '<div class="flujo-num">' + s.num + '</div>' +
+            '<div class="flujo-lbl">' + s.lbl + '</div>' +
+            '</div>';
+        if (i < steps.length - 1) html += '<div class="flujo-arrow">›</div>';
+    });
+    document.getElementById('flujoSteps').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────
+// RENDER TABLA PENDIENTES
+// ─────────────────────────────────────────────────────
+function renderTabla(canales) {
+    var sorted = canales.slice().sort(function(a,b) { return (b.SinRemitir - a.SinRemitir) || (b.PendFacturar - a.PendFacturar); });
+    document.getElementById('tablaPend').innerHTML = sorted.map(function(c) {
+        var pf = Number(c.PendFacturar)||0;
+        var sr = Number(c.SinRemitir)||0;
+        var bPF = pf > 0 ? '<span class="badge-pend amber">⏳ ' + fNum(pf) + '</span>' : '<span class="badge-pend ok">0</span>';
+        var bSR = sr > 0 ? '<span class="badge-pend red">⚠️ '  + fNum(sr) + '</span>' : '<span class="badge-pend ok">0</span>';
+        return '<tr>' +
+            '<td><div class="td-canal"><span>' + canalIcon(c.Nombre) + '</span>' + c.Nombre + '</div></td>' +
+            '<td class="r">' + bPF + '</td>' +
+            '<td class="r" style="color:' + (pf>0?'#f59e0b':'#94a3b8') + ';font-weight:' + (pf>0?'600':'400') + '">' + fCurFull(c.ImportePendFacturar) + '</td>' +
+            '<td class="r">' + bSR + '</td>' +
+            '<td class="r" style="color:' + (sr>0?'#ef4444':'#94a3b8') + ';font-weight:' + (sr>0?'600':'400') + '">' + fCurFull(c.ImportePendRemitir) + '</td>' +
+            '</tr>';
+    }).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8">Sin datos</td></tr>';
+}
+
+// ─────────────────────────────────────────────────────
+// RENDER CARDS DE CANAL
+// ─────────────────────────────────────────────────────
+function renderCanales(canales) {
+    document.getElementById('canalesGrid').innerHTML = canales.map(function(c) {
+        var pctF = pct(c.Facturadas, c.Ordenes);
+        var pctR = pct(c.Remitidas,  c.Facturadas);
+        var pf   = Number(c.PendFacturar)||0;
+        var sr   = Number(c.SinRemitir)||0;
+        var ipf  = Number(c.ImportePendFacturar)||0;
+        var isr  = Number(c.ImportePendRemitir)||0;
+
+        return '<div class="canal-card">' +
+            '<div class="canal-header">' +
+                '<div class="canal-nombre">' + canalIcon(c.Nombre) + ' ' + c.Nombre + '</div>' +
+                '<div class="canal-total">' + fNum(c.Ordenes) + '</div>' +
+            '</div>' +
+            '<div class="canal-bars">' +
+                '<div class="bar-block">' +
+                    '<div class="bar-label-row"><span>Facturación</span><span style="font-weight:700;color:#2596be">' + pctF + '%</span></div>' +
+                    '<div class="bar-track"><div class="bar-fill blue" style="width:' + pctF + '%"></div></div>' +
+                    '<div class="bar-counts"><span>✓ ' + fNum(c.Facturadas) + '</span><span style="color:' + (pf>0?'#f59e0b':'#94a3b8') + '">⏳ ' + fNum(pf) + '</span></div>' +
+                '</div>' +
+                '<div class="bar-block">' +
+                    '<div class="bar-label-row"><span>Remisión</span><span style="font-weight:700;color:#10b981">' + pctR + '%</span></div>' +
+                    '<div class="bar-track"><div class="bar-fill green" style="width:' + pctR + '%"></div></div>' +
+                    '<div class="bar-counts"><span>🚚 ' + fNum(c.Remitidas) + '</span><span style="color:' + (sr>0?'#ef4444':'#94a3b8') + '">⚠️ ' + fNum(sr) + '</span></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="canal-footer">' +
+                (pf > 0 ? '<span class="badge-pend amber">⏳ ' + fNum(pf) + ' &nbsp; ' + fCurFull(ipf) + '</span>' : '<span class="badge-pend ok">⏳ Sin pendientes fact.</span>') +
+                (sr > 0 ? '<span class="badge-pend red">⚠️ '  + fNum(sr) + ' &nbsp; ' + fCurFull(isr) + '</span>' : '<span class="badge-pend ok">⚠️ Sin pendientes remisión</span>') +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// RENDER PRINCIPAL
+// ─────────────────────────────────────────────────────
+function renderDatos(datos, meta) {
+    var canales    = datos.filter(function(d){ return d.TipoAgrupacion==='CANAL'    && d.OrdenFila===0; });
+    var totalCanal = datos.find (function(d){ return d.TipoAgrupacion==='CANAL'    && d.OrdenFila===1; });
+
+    var t = totalCanal ? {
+        ordenes:       Number(totalCanal.Ordenes),
+        facturadas:    Number(totalCanal.Facturadas),
+        pendFacturar:  Number(totalCanal.PendFacturar),
+        remitidas:     Number(totalCanal.Remitidas),
+        sinRemitir:    Number(totalCanal.SinRemitir),
+        importePendFact: Number(totalCanal.ImportePendFacturar)||0,
+        importePendRem:  Number(totalCanal.ImportePendRemitir)||0
+    } : { ordenes:0, facturadas:0, pendFacturar:0, remitidas:0, sinRemitir:0, importePendFact:0, importePendRem:0 };
+
+    renderMetricas(t);
+    renderFlujo(t);
+    renderGraficos(canales, t);
+    renderTabla(canales);
+    renderCanales(canales);
+
+    // Info bar
+    var ahora = new Date();
+    document.getElementById('infoActualizado').textContent = ahora.toLocaleString('es-AR');
+    document.getElementById('infoBackend').textContent = 'Conectado';
+    document.getElementById('dotEstado').className = 'dot-ok';
+
+    if (meta) {
+        // Jornada
+        var dDesde = new Date(meta.inicioJornada || meta.fechaDesde);
+        var dHasta = new Date(meta.finJornada);
+        var fmtDT = function(d) {
+            return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) + ' ' +
+                   d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        };
+        document.getElementById('jornadaTexto').textContent = fmtDT(dDesde) + ' → ' + fmtDT(dHasta);
+        document.getElementById('jornadaBox').style.display = 'flex';
+
+        var desde30 = new Date(meta.fechaDesde);
+        document.getElementById('infoPeriodo').textContent =
+            desde30.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) +
+            ' → ' + ahora.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+        document.getElementById('infoJornada').textContent = fmtDT(dDesde) + ' → ' + fmtDT(dHasta);
+    }
+}
+
+// ─────────────────────────────────────────────────────
+// CARGA DE DATOS
+// ─────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────
+// JSONP — Apps Script devuelve callback({...})
+// No se puede usar fetch() porque el endpoint es JSONP
+// ─────────────────────────────────────────────────────
+var _jsonpTimer = null;
+
+function _jsonpCallback(json) {
+    // Limpiar timeout y tag <script>
+    if (_jsonpTimer) { clearTimeout(_jsonpTimer); _jsonpTimer = null; }
+    var old = document.getElementById('_jsonpTag');
+    if (old) old.parentNode.removeChild(old);
+
+    var btn  = document.getElementById('btnReload');
+    var ico  = document.getElementById('icoReload');
+    btn.disabled = false;
+    ico.classList.remove('spin');
+
+    if (json.error) {
+        mostrarError('Error del servidor: ' + (json.message || 'desconocido'));
+        return;
+    }
+
+    var datos = json.data || json;
+    var meta  = {
+        inicioJornada: json.inicioJornada,
+        finJornada:    json.finJornada,
+        fechaDesde:    json.fechaDesde
+    };
+    renderDatos(datos, meta);
+}
+
+function mostrarError(msg) {
+    var errB = document.getElementById('errorBox');
+    document.getElementById('errorText').textContent = msg;
+    errB.style.display = 'flex';
+    document.getElementById('infoBackend').textContent = 'Error';
+    document.getElementById('dotEstado').className = 'dot-err';
+    var btn = document.getElementById('btnReload');
+    var ico = document.getElementById('icoReload');
+    btn.disabled = false;
+    ico.classList.remove('spin');
+}
+
+function cargarDatos() {
+    var btn  = document.getElementById('btnReload');
+    var ico  = document.getElementById('icoReload');
+    var errB = document.getElementById('errorBox');
+    btn.disabled = true;
+    ico.classList.add('spin');
+    errB.style.display = 'none';
+
+    if (CONFIG.USAR_DATOS_EJEMPLO) {
+        setTimeout(function() {
+            var btn = document.getElementById('btnReload');
+            var ico = document.getElementById('icoReload');
+            btn.disabled = false;
+            ico.classList.remove('spin');
+            renderDatos(DATOS_EJEMPLO, null);
+        }, 600);
+        return;
+    }
+
+    // Eliminar tag anterior si existe
+    var oldTag = document.getElementById('_jsonpTag');
+    if (oldTag) oldTag.parentNode.removeChild(oldTag);
+
+    // Timeout de 15 segundos
+    _jsonpTimer = setTimeout(function() {
+        mostrarError('Tiempo de espera agotado. Verificar conexión con Apps Script.');
+    }, 15000);
+
+    // Inyectar <script> con la URL del Apps Script + callback
+    var url = CONFIG.APPS_SCRIPT_URL + '?callback=_jsonpCallback&t=' + Date.now();
+    var tag = document.createElement('script');
+    tag.id  = '_jsonpTag';
+    tag.src = url;
+    tag.onerror = function() {
+        if (_jsonpTimer) { clearTimeout(_jsonpTimer); _jsonpTimer = null; }
+        mostrarError('No se pudo conectar con el servidor de datos.');
+    };
+    document.head.appendChild(tag);
+}
+
+document.getElementById('btnReload').addEventListener('click', cargarDatos);
+cargarDatos();
+setInterval(cargarDatos, CONFIG.AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
