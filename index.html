@@ -849,7 +849,7 @@
 // CONFIG
 // ─────────────────────────────────────────────────────
 var CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyn4ei3_bMVF7siazbjoKod3-g4AaJuuV54LugWkp50SxIkCqztfleDqvmbFDJdpR1b/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyaSUgKBwG8SR3RMdhogJ_1E73dFmChaTFwWu85XTn1EH6B2dTurlWpJa_2Oy2Agi7p/exec',
     USAR_DATOS_EJEMPLO: false,
     AUTO_REFRESH_MS: 5 * 60 * 1000
 };
@@ -1383,15 +1383,19 @@ function _jsonpCallback(json) {
 
     if (json.error) { mostrarError('Error del servidor: ' + (json.message || 'desconocido')); return; }
 
-    // Convertir fechas de string a Date en el detalle
-    (json.detallePendFact || []).forEach(function(r) {
+    // Convertir fechas de string a Date en el detalle (con guard contra nulls)
+    (json.detallePendFact || []).filter(Boolean).forEach(function(r) {
         r.FechaOrden = r.FechaOrden ? new Date(r.FechaOrden) : null;
         r.FechaFAC   = r.FechaFAC   ? new Date(r.FechaFAC)   : null;
     });
-    (json.detalleSinRemitir || []).forEach(function(r) {
+    (json.detalleSinRemitir || []).filter(Boolean).forEach(function(r) {
         r.FechaOrden = r.FechaOrden ? new Date(r.FechaOrden) : null;
         r.FechaFAC   = r.FechaFAC   ? new Date(r.FechaFAC)   : null;
     });
+    // Limpiar nulls de los arrays
+    json.detallePendFact   = (json.detallePendFact   || []).filter(Boolean);
+    json.detalleSinRemitir = (json.detalleSinRemitir || []).filter(Boolean);
+    json.resumenGVA12      = (json.resumenGVA12      || []).filter(Boolean);
 
     renderGVA12(json.resumenGVA12 || []);
     aplicarFiltro(json);
