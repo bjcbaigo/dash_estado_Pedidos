@@ -509,7 +509,85 @@
         .demora-search input:focus { border-color: var(--blue); }
         .demora-count-label { font-size: 11px; color: var(--g400); white-space: nowrap; }
 
+        /* ── SECCION GVA12 ── */
+        .gva12-section {
+            margin-bottom: 14px;
+        }
+        .gva12-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .gva12-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-left: 3px solid var(--blue-lt);
+            border-radius: var(--card-r);
+            padding: 12px 14px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .gva12-canal { font-size: 13px; font-weight: 600; color: var(--g700); display: flex; align-items: center; gap: 6px; }
+        .gva12-nums  { text-align: right; }
+        .gva12-fact  { font-size: 18px; font-weight: 700; color: var(--blue); letter-spacing: -.3px; }
+        .gva12-imp   { font-size: 11px; color: var(--g400); }
+        .gva12-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--blue-bg); color: var(--blue);
+            border: 1px solid var(--blue-lt);
+            border-radius: 20px; padding: 2px 8px;
+            font-size: 10px; font-weight: 600;
+        }
+        @media (min-width: 600px) {
+            .gva12-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 960px) {
+            .gva12-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
         /* ── FOOTER ── */
+        /* ── SECCION GVA12 ── */
+        .gva12-section {
+            margin-bottom: 14px;
+        }
+        .gva12-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .gva12-card {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-left: 3px solid var(--blue-lt);
+            border-radius: var(--card-r);
+            padding: 12px 14px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .gva12-canal { font-size: 13px; font-weight: 600; color: var(--g700); display: flex; align-items: center; gap: 6px; }
+        .gva12-nums  { text-align: right; }
+        .gva12-fact  { font-size: 18px; font-weight: 700; color: var(--blue); letter-spacing: -.3px; }
+        .gva12-imp   { font-size: 11px; color: var(--g400); }
+        .gva12-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--blue-bg); color: var(--blue);
+            border: 1px solid var(--blue-lt);
+            border-radius: 20px; padding: 2px 8px;
+            font-size: 10px; font-weight: 600;
+        }
+        @media (min-width: 600px) {
+            .gva12-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 960px) {
+            .gva12-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
         /* ── FOOTER ── */
         .page-footer {
             text-align: center;
@@ -686,6 +764,16 @@
     </div>
     <div class="canales-grid" id="canalesGrid"></div>
 
+    <!-- CANALES SIN FLUJO NEXO -->
+    <div class="gva12-section" id="seccionGVA12" style="display:none">
+        <div class="section-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Facturación Directa (sin flujo NEXO)
+            <span class="gva12-badge">Solo FAC · Sin trazabilidad de remito</span>
+        </div>
+        <div class="gva12-grid" id="gva12Grid"></div>
+    </div>
+
     <!-- DETALLE DE DEMORA -->
     <div class="section-title">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -761,7 +849,7 @@
 // CONFIG
 // ─────────────────────────────────────────────────────
 var CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyn4ei3_bMVF7siazbjoKod3-g4AaJuuV54LugWkp50SxIkCqztfleDqvmbFDJdpR1b/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyaSUgKBwG8SR3RMdhogJ_1E73dFmChaTFwWu85XTn1EH6B2dTurlWpJa_2Oy2Agi7p/exec',
     USAR_DATOS_EJEMPLO: false,
     AUTO_REFRESH_MS: 5 * 60 * 1000
 };
@@ -1106,6 +1194,28 @@ function cargarDatos(paramDesde, paramHasta) {
     document.head.appendChild(tag);
 }
 
+// ─────────────────────────────────────────────────────
+// RENDER SECCION GVA12
+// ─────────────────────────────────────────────────────
+function renderGVA12(resumen) {
+    var sec  = document.getElementById('seccionGVA12');
+    var grid = document.getElementById('gva12Grid');
+    if (!resumen || resumen.length === 0) {
+        sec.style.display = 'none';
+        return;
+    }
+    sec.style.display = 'block';
+    grid.innerHTML = resumen.map(function(r) {
+        return '<div class="gva12-card">' +
+            '<div class="gva12-canal">' + canalIcon(r.Canal) + ' ' + r.Canal + '</div>' +
+            '<div class="gva12-nums">' +
+                '<div class="gva12-fact">' + fNum(r.Facturas) + '</div>' +
+                '<div class="gva12-imp">' + fCurFull(r.ImporteFAC) + '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
 document.getElementById('btnReload').addEventListener('click', cargarDatos);
 
 // ─────────────────────────────────────────────────────
@@ -1306,6 +1416,7 @@ function _jsonpCallbackExtended(json) {
         r.FechaFAC   = r.FechaFAC   ? new Date(r.FechaFAC)   : null;
     });
 
+    renderGVA12(json.resumenGVA12 || []);
     aplicarFiltro(json);
 }
 
