@@ -761,7 +761,7 @@
 // CONFIG
 // ─────────────────────────────────────────────────────
 var CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyn4ei3_bMVF7siazbjoKod3-g4AaJuuV54LugWkp50SxIkCqztfleDqvmbFDJdpR1b/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyaSUgKBwG8SR3RMdhogJ_1E73dFmChaTFwWu85XTn1EH6B2dTurlWpJa_2Oy2Agi7p/exec',
     USAR_DATOS_EJEMPLO: false,
     AUTO_REFRESH_MS: 5 * 60 * 1000
 };
@@ -1061,7 +1061,7 @@ function mostrarError(msg) {
     ico.classList.remove('spin');
 }
 
-function cargarDatos() {
+function cargarDatos(paramDesde, paramHasta) {
     var btn  = document.getElementById('btnReload');
     var ico  = document.getElementById('icoReload');
     var errB = document.getElementById('errorBox');
@@ -1084,13 +1084,18 @@ function cargarDatos() {
     var oldTag = document.getElementById('_jsonpTag');
     if (oldTag) oldTag.parentNode.removeChild(oldTag);
 
-    // Timeout de 15 segundos
+    // Timeout de 20 segundos
     _jsonpTimer = setTimeout(function() {
-        mostrarError('Tiempo de espera agotado. Verificar conexión con Apps Script.');
-    }, 15000);
+        mostrarError('Tiempo de espera agotado. Verificar conexion con Apps Script.');
+    }, 20000);
 
-    // Inyectar <script> con la URL del Apps Script + callback
+    // Construir URL con parametros opcionales de periodo
     var url = CONFIG.APPS_SCRIPT_URL + '?callback=_jsonpCallback&t=' + Date.now();
+    if (paramDesde && paramHasta) {
+        url += '&desde=' + encodeURIComponent(paramDesde);
+        url += '&hasta=' + encodeURIComponent(paramHasta);
+    }
+
     var tag = document.createElement('script');
     tag.id  = '_jsonpTag';
     tag.src = url;
@@ -1111,12 +1116,22 @@ var _datosCompletos = null;   // cache del JSON completo del Apps Script
 
 function setPeriodo(dias) {
     _periodoActual = { tipo: 'dias', dias: dias, desde: null, hasta: null };
-    // Actualizar botones
     document.querySelectorAll('.btn-periodo').forEach(function(b) {
         b.classList.toggle('active', parseInt(b.dataset.dias) === dias);
     });
     document.getElementById('periodoCustom').classList.remove('visible');
-    if (_datosCompletos) aplicarFiltro(_datosCompletos);
+    // Calcular rango y recargar desde servidor
+    var hoy   = new Date();
+    var desde = new Date(hoy); desde.setDate(desde.getDate() - dias);
+    // "Hoy" = jornada actual, usar defaults del servidor
+    if (dias === 1) {
+        cargarDatos(null, null);  // usa jornada comercial del servidor
+    } else {
+        cargarDatos(
+            desde.toISOString().slice(0,10),
+            hoy.toISOString().slice(0,10)
+        );
+    }
 }
 
 function setPeriodoCustom() {
@@ -1133,12 +1148,13 @@ function setPeriodoCustom() {
 function aplicarCustom() {
     var dStr = document.getElementById('dateDesde').value;
     var hStr = document.getElementById('dateHasta').value;
-    if (!dStr || !hStr) return;
+    if (!dStr || !hStr) { alert('Selecciona ambas fechas.'); return; }
     var desde = new Date(dStr + 'T00:00:00');
     var hasta = new Date(hStr + 'T23:59:59');
     if (desde > hasta) { alert('La fecha desde debe ser anterior a la fecha hasta.'); return; }
     _periodoActual = { tipo: 'custom', dias: 0, desde: desde, hasta: hasta };
-    if (_datosCompletos) aplicarFiltro(_datosCompletos);
+    // Recargar desde servidor con el rango personalizado
+    cargarDatos(dStr, hStr);
 }
 
 // Filtra el detalle de demora según el período seleccionado
@@ -1157,34 +1173,21 @@ function filtrarPorPeriodo(lista, usarFechaFAC) {
     });
 }
 
-// Aplica el período a los datos cacheados y re-renderiza
+// Recibe datos ya filtrados desde el servidor y renderiza
 function aplicarFiltro(json) {
     _datosCompletos = json;
 
-    var hoy = new Date();
     var datos = json.data || json;
+    var pendFiltrado   = json.detallePendFact   || [];
+    var sinRemFiltrado = json.detalleSinRemitir || [];
 
-    // Re-filtrar data principal por período
-    var canales    = datos.filter(function(d){ return d.TipoAgrupacion==='CANAL' && d.OrdenFila===0; });
-    var totalCanal = datos.find (function(d){ return d.TipoAgrupacion==='CANAL' && d.OrdenFila===1; });
-
-    // Recalcular totales desde el detalle filtrado
-    var pendFiltrado = filtrarPorPeriodo(json.detallePendFact   || [], false);
-    var sinRemFiltrado = filtrarPorPeriodo(json.detalleSinRemitir || [], true);
-
-    // Actualizar tablas de demora
     renderDemora(pendFiltrado, sinRemFiltrado);
 
     // Actualizar label de período en infobar
-    if (_periodoActual.tipo === 'dias') {
-        var d = new Date(hoy); d.setDate(d.getDate() - _periodoActual.dias);
-        document.getElementById('infoPeriodo').textContent =
-            d.toLocaleDateString('es-AR') + ' → ' + hoy.toLocaleDateString('es-AR');
-    } else {
-        document.getElementById('infoPeriodo').textContent =
-            _periodoActual.desde.toLocaleDateString('es-AR') + ' → ' +
-            _periodoActual.hasta.toLocaleDateString('es-AR');
-    }
+    var dDesde = new Date(json.fechaDesde);
+    var dHasta = json.finJornada ? new Date(json.finJornada) : new Date();
+    document.getElementById('infoPeriodo').textContent =
+        dDesde.toLocaleDateString('es-AR') + ' → ' + dHasta.toLocaleDateString('es-AR');
 
     renderDatos(datos, {
         inicioJornada: json.inicioJornada,
