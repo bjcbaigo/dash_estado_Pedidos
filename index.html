@@ -366,6 +366,150 @@
         .bar-counts { display: flex; justify-content: space-between; font-size: 10px; color: var(--g400); margin-top: 3px; }
         .canal-footer { border-top: 1px solid var(--g100); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 
+        /* ── SELECTOR DE PERIODO ── */
+        .periodo-bar {
+            background: var(--white);
+            border: 1px solid var(--g200);
+            border-radius: var(--card-r);
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: var(--shadow);
+        }
+        .periodo-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--g500);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-right: 4px;
+        }
+        .periodo-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+        .btn-periodo {
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--g200);
+            background: var(--g50);
+            color: var(--g700);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .btn-periodo:hover  { border-color: var(--blue); color: var(--blue); }
+        .btn-periodo.active { background: var(--blue); color: var(--white); border-color: var(--blue); font-weight: 600; }
+        .periodo-custom {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .periodo-custom.visible { display: flex; }
+        .periodo-custom label { font-size: 11px; color: var(--g500); font-weight: 600; }
+        .periodo-custom input[type=date] {
+            border: 1px solid var(--g200);
+            border-radius: var(--sm-r);
+            padding: 5px 8px;
+            font-size: 12px;
+            color: var(--g900);
+            font-family: 'DM Sans', sans-serif;
+            background: var(--white);
+            outline: none;
+            transition: border-color .15s;
+        }
+        .periodo-custom input[type=date]:focus { border-color: var(--blue); }
+        .btn-aplicar {
+            padding: 5px 12px;
+            background: var(--blue);
+            color: var(--white);
+            border: none;
+            border-radius: var(--sm-r);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background .15s;
+        }
+        .btn-aplicar:hover { background: var(--blue-dk); }
+
+        /* ── TABLA DEMORA ── */
+        .demora-section { margin-bottom: 14px; }
+        .demora-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+            border-bottom: 2px solid var(--g200);
+        }
+        .demora-tab {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--g400);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .demora-tab:hover { color: var(--g700); }
+        .demora-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .demora-tab.amber.active  { color: var(--amber); border-bottom-color: var(--amber); }
+        .demora-tab.red.active    { color: var(--red);   border-bottom-color: var(--red);   }
+        .demora-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0 5px;
+        }
+        .demora-count.amber { background: var(--amber-bg); color: var(--amber); }
+        .demora-count.red   { background: var(--red-bg);   color: var(--red);   }
+        .demora-panel { display: none; }
+        .demora-panel.active { display: block; }
+        .dias-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .dias-badge.ok     { background: var(--green-bg); color: var(--green); }
+        .dias-badge.warn   { background: var(--amber-bg); color: var(--amber); }
+        .dias-badge.danger { background: var(--red-bg);   color: var(--red);   }
+        .demora-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--g100);
+        }
+        .demora-search input {
+            flex: 1;
+            border: 1px solid var(--g200);
+            border-radius: var(--sm-r);
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            color: var(--g900);
+        }
+        .demora-search input:focus { border-color: var(--blue); }
+        .demora-count-label { font-size: 11px; color: var(--g400); white-space: nowrap; }
+
+        /* ── FOOTER ── */
         /* ── FOOTER ── */
         .page-footer {
             text-align: center;
@@ -458,6 +602,25 @@
         <span>Jornada comercial: <strong id="jornadaTexto">—</strong></span>
     </div>
 
+    <!-- SELECTOR DE PERIODO -->
+    <div class="periodo-bar">
+        <span class="periodo-label">Período</span>
+        <div class="periodo-btns">
+            <button class="btn-periodo" data-dias="1"  onclick="setPeriodo(1)">Hoy</button>
+            <button class="btn-periodo" data-dias="7"  onclick="setPeriodo(7)">7 días</button>
+            <button class="btn-periodo" data-dias="15" onclick="setPeriodo(15)">15 días</button>
+            <button class="btn-periodo active" data-dias="30" onclick="setPeriodo(30)">30 días</button>
+            <button class="btn-periodo" data-dias="0"  onclick="setPeriodoCustom()">Personalizado ▾</button>
+        </div>
+        <div class="periodo-custom" id="periodoCustom">
+            <label>Desde</label>
+            <input type="date" id="dateDesde">
+            <label>Hasta</label>
+            <input type="date" id="dateHasta">
+            <button class="btn-aplicar" onclick="aplicarCustom()">Aplicar</button>
+        </div>
+    </div>
+
     <!-- MÉTRICAS -->
     <div class="metricas-grid" id="metricas">
         <!-- generado por JS -->
@@ -523,6 +686,70 @@
     </div>
     <div class="canales-grid" id="canalesGrid"></div>
 
+    <!-- DETALLE DE DEMORA -->
+    <div class="section-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Detalle de Demora por Pedido
+    </div>
+    <div class="table-card demora-section">
+        <div class="demora-tabs">
+            <div class="demora-tab amber active" id="tabPendFact" onclick="switchDemoraTab('pendFact')">
+                ⏳ Pend. Facturar <span class="demora-count amber" id="cntPendFact">0</span>
+            </div>
+            <div class="demora-tab red" id="tabSinRem" onclick="switchDemoraTab('sinRem')">
+                ⚠️ Sin Remitir <span class="demora-count red" id="cntSinRem">0</span>
+            </div>
+        </div>
+
+        <!-- Panel: Pendientes de facturar -->
+        <div class="demora-panel active" id="panelPendFact">
+            <div class="demora-search">
+                <input type="text" id="searchPendFact" placeholder="Buscar por ID, canal..." oninput="filtrarDemora('pendFact')">
+                <span class="demora-count-label" id="lblPendFact">0 pedidos</span>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Canal</th>
+                            <th>ID Orden</th>
+                            <th>ID Tienda</th>
+                            <th>Estado</th>
+                            <th class="r">Fecha Orden</th>
+                            <th class="r">Días demora</th>
+                            <th class="r">$ Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyPendFact"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Panel: Sin remitir -->
+        <div class="demora-panel" id="panelSinRem">
+            <div class="demora-search">
+                <input type="text" id="searchSinRem" placeholder="Buscar por ID, canal..." oninput="filtrarDemora('sinRem')">
+                <span class="demora-count-label" id="lblSinRem">0 pedidos</span>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Canal</th>
+                            <th>ID Orden</th>
+                            <th>ID Tienda</th>
+                            <th>Estado</th>
+                            <th class="r">Fecha FAC</th>
+                            <th class="r">Días demora</th>
+                            <th class="r">$ Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodySinRem"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="page-footer">
         Tango Gestión · Talonarios e-commerce 234, 205 &nbsp;·&nbsp; Dashboard de control de facturación y logística
     </div>
@@ -534,7 +761,7 @@
 // CONFIG
 // ─────────────────────────────────────────────────────
 var CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyn4ei3_bMVF7siazbjoKod3-g4AaJuuV54LugWkp50SxIkCqztfleDqvmbFDJdpR1b/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyaSUgKBwG8SR3RMdhogJ_1E73dFmChaTFwWu85XTn1EH6B2dTurlWpJa_2Oy2Agi7p/exec',
     USAR_DATOS_EJEMPLO: false,
     AUTO_REFRESH_MS: 5 * 60 * 1000
 };
@@ -875,6 +1102,213 @@ function cargarDatos() {
 }
 
 document.getElementById('btnReload').addEventListener('click', cargarDatos);
+
+// ─────────────────────────────────────────────────────
+// SELECTOR DE PERIODO
+// ─────────────────────────────────────────────────────
+var _periodoActual = { tipo: 'dias', dias: 30, desde: null, hasta: null };
+var _datosCompletos = null;   // cache del JSON completo del Apps Script
+
+function setPeriodo(dias) {
+    _periodoActual = { tipo: 'dias', dias: dias, desde: null, hasta: null };
+    // Actualizar botones
+    document.querySelectorAll('.btn-periodo').forEach(function(b) {
+        b.classList.toggle('active', parseInt(b.dataset.dias) === dias);
+    });
+    document.getElementById('periodoCustom').classList.remove('visible');
+    if (_datosCompletos) aplicarFiltro(_datosCompletos);
+}
+
+function setPeriodoCustom() {
+    document.querySelectorAll('.btn-periodo').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelector('[data-dias="0"]').classList.add('active');
+    document.getElementById('periodoCustom').classList.add('visible');
+    // Precargar fechas con rango actual
+    var hoy = new Date();
+    var desde = new Date(hoy); desde.setDate(desde.getDate() - 30);
+    document.getElementById('dateDesde').value = desde.toISOString().slice(0,10);
+    document.getElementById('dateHasta').value = hoy.toISOString().slice(0,10);
+}
+
+function aplicarCustom() {
+    var dStr = document.getElementById('dateDesde').value;
+    var hStr = document.getElementById('dateHasta').value;
+    if (!dStr || !hStr) return;
+    var desde = new Date(dStr + 'T00:00:00');
+    var hasta = new Date(hStr + 'T23:59:59');
+    if (desde > hasta) { alert('La fecha desde debe ser anterior a la fecha hasta.'); return; }
+    _periodoActual = { tipo: 'custom', dias: 0, desde: desde, hasta: hasta };
+    if (_datosCompletos) aplicarFiltro(_datosCompletos);
+}
+
+// Filtra el detalle de demora según el período seleccionado
+function filtrarPorPeriodo(lista, usarFechaFAC) {
+    var hoy = new Date();
+    return lista.filter(function(row) {
+        var fecha = usarFechaFAC ? row.FechaFAC : row.FechaOrden;
+        if (!fecha) return false;
+        if (_periodoActual.tipo === 'dias') {
+            var limite = new Date(hoy);
+            limite.setDate(limite.getDate() - _periodoActual.dias);
+            return fecha >= limite;
+        } else {
+            return fecha >= _periodoActual.desde && fecha <= _periodoActual.hasta;
+        }
+    });
+}
+
+// Aplica el período a los datos cacheados y re-renderiza
+function aplicarFiltro(json) {
+    _datosCompletos = json;
+
+    var hoy = new Date();
+    var datos = json.data || json;
+
+    // Re-filtrar data principal por período
+    var canales    = datos.filter(function(d){ return d.TipoAgrupacion==='CANAL' && d.OrdenFila===0; });
+    var totalCanal = datos.find (function(d){ return d.TipoAgrupacion==='CANAL' && d.OrdenFila===1; });
+
+    // Recalcular totales desde el detalle filtrado
+    var pendFiltrado = filtrarPorPeriodo(json.detallePendFact   || [], false);
+    var sinRemFiltrado = filtrarPorPeriodo(json.detalleSinRemitir || [], true);
+
+    // Actualizar tablas de demora
+    renderDemora(pendFiltrado, sinRemFiltrado);
+
+    // Actualizar label de período en infobar
+    if (_periodoActual.tipo === 'dias') {
+        var d = new Date(hoy); d.setDate(d.getDate() - _periodoActual.dias);
+        document.getElementById('infoPeriodo').textContent =
+            d.toLocaleDateString('es-AR') + ' → ' + hoy.toLocaleDateString('es-AR');
+    } else {
+        document.getElementById('infoPeriodo').textContent =
+            _periodoActual.desde.toLocaleDateString('es-AR') + ' → ' +
+            _periodoActual.hasta.toLocaleDateString('es-AR');
+    }
+
+    renderDatos(datos, {
+        inicioJornada: json.inicioJornada,
+        finJornada:    json.finJornada,
+        fechaDesde:    json.fechaDesde
+    });
+}
+
+// ─────────────────────────────────────────────────────
+// TABLA DE DEMORA
+// ─────────────────────────────────────────────────────
+var _detallePendFact   = [];
+var _detalleSinRemitir = [];
+
+function diasDemora(fecha) {
+    if (!fecha) return 0;
+    return Math.max(0, Math.floor((new Date() - new Date(fecha)) / 86400000));
+}
+
+function badgeDias(dias) {
+    var cls = dias <= 2 ? 'ok' : dias <= 5 ? 'warn' : 'danger';
+    return '<span class="dias-badge ' + cls + '">' + dias + ' d</span>';
+}
+
+function fmtFecha(d) {
+    if (!d) return '—';
+    var dt = new Date(d);
+    return dt.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+}
+
+function renderFilasDemora(filas, bodyId, usarFechaFAC) {
+    var body = document.getElementById(bodyId);
+    if (!filas || filas.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">Sin pendientes en el período</td></tr>';
+        return;
+    }
+    body.innerHTML = filas.map(function(row) {
+        var fechaRef  = usarFechaFAC ? row.FechaFAC : row.FechaOrden;
+        var dias      = diasDemora(fechaRef);
+        var fechaStr  = fmtFecha(fechaRef);
+        var estado    = String(row.EstadoOrden || '').toUpperCase();
+        var estadoColor = estado === 'FINALIZADA' ? '#10b981' : estado === 'EN PROCESO' ? '#2596be' : '#94a3b8';
+        return '<tr>' +
+            '<td><div class="td-canal">' + canalIcon(row.Canal) + ' ' + row.Canal + '</div></td>' +
+            '<td style="font-family:monospace;font-size:11px;color:#334155">' + (row.IDOrden || '—') + '</td>' +
+            '<td style="font-size:11px;color:#64748b">' + (row.IDOrdenTienda || '—') + '</td>' +
+            '<td><span style="font-size:10px;font-weight:600;color:' + estadoColor + '">' + estado + '</span></td>' +
+            '<td class="r" style="font-size:11px;color:#64748b">' + fechaStr + '</td>' +
+            '<td class="r">' + badgeDias(dias) + '</td>' +
+            '<td class="r" style="font-weight:600;color:#334155">' + fCurFull(row.Importe) + '</td>' +
+        '</tr>';
+    }).join('');
+}
+
+function renderDemora(pendFact, sinRem) {
+    _detallePendFact   = pendFact   || [];
+    _detalleSinRemitir = sinRem     || [];
+
+    // Actualizar contadores en tabs
+    document.getElementById('cntPendFact').textContent = _detallePendFact.length;
+    document.getElementById('cntSinRem').textContent   = _detalleSinRemitir.length;
+    document.getElementById('lblPendFact').textContent = _detallePendFact.length + ' pedidos';
+    document.getElementById('lblSinRem').textContent   = _detalleSinRemitir.length + ' pedidos';
+
+    renderFilasDemora(_detallePendFact,   'bodyPendFact', false);
+    renderFilasDemora(_detalleSinRemitir, 'bodySinRem',   true);
+}
+
+function switchDemoraTab(tab) {
+    document.querySelectorAll('.demora-tab').forEach(function(t)   { t.classList.remove('active'); });
+    document.querySelectorAll('.demora-panel').forEach(function(p) { p.classList.remove('active'); });
+    if (tab === 'pendFact') {
+        document.getElementById('tabPendFact').classList.add('active');
+        document.getElementById('panelPendFact').classList.add('active');
+    } else {
+        document.getElementById('tabSinRem').classList.add('active');
+        document.getElementById('panelSinRem').classList.add('active');
+    }
+}
+
+function filtrarDemora(tipo) {
+    var q    = document.getElementById('search' + (tipo === 'pendFact' ? 'PendFact' : 'SinRem')).value.toLowerCase();
+    var src  = tipo === 'pendFact' ? _detallePendFact : _detalleSinRemitir;
+    var filt = src.filter(function(r) {
+        return (String(r.IDOrden||'') + String(r.IDOrdenTienda||'') + String(r.Canal||'')).toLowerCase().indexOf(q) !== -1;
+    });
+    renderFilasDemora(filt, tipo === 'pendFact' ? 'bodyPendFact' : 'bodySinRem', tipo !== 'pendFact');
+    var lbl = tipo === 'pendFact' ? 'lblPendFact' : 'lblSinRem';
+    document.getElementById(lbl).textContent = filt.length + ' pedidos' + (q ? ' (filtrados)' : '');
+}
+
+// ─────────────────────────────────────────────────────
+// OVERRIDE: cargarDatos guarda cache y aplica filtro
+// ─────────────────────────────────────────────────────
+var _jsonpTimerOrig = null;
+
+function _jsonpCallbackExtended(json) {
+    if (_jsonpTimer) { clearTimeout(_jsonpTimer); _jsonpTimer = null; }
+    var old = document.getElementById('_jsonpTag');
+    if (old) old.parentNode.removeChild(old);
+
+    var btn = document.getElementById('btnReload');
+    var ico = document.getElementById('icoReload');
+    btn.disabled = false;
+    ico.classList.remove('spin');
+
+    if (json.error) { mostrarError('Error del servidor: ' + (json.message || 'desconocido')); return; }
+
+    // Convertir fechas de string a Date en el detalle
+    (json.detallePendFact || []).forEach(function(r) {
+        r.FechaOrden = r.FechaOrden ? new Date(r.FechaOrden) : null;
+        r.FechaFAC   = r.FechaFAC   ? new Date(r.FechaFAC)   : null;
+    });
+    (json.detalleSinRemitir || []).forEach(function(r) {
+        r.FechaOrden = r.FechaOrden ? new Date(r.FechaOrden) : null;
+        r.FechaFAC   = r.FechaFAC   ? new Date(r.FechaFAC)   : null;
+    });
+
+    aplicarFiltro(json);
+}
+
+// Reemplazar callback original por el extendido
+window._jsonpCallback = _jsonpCallbackExtended;
+
 cargarDatos();
 setInterval(cargarDatos, CONFIG.AUTO_REFRESH_MS);
 </script>
